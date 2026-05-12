@@ -11,7 +11,7 @@ export const BASE_URL = useRemote
     : 'http://localhost:8888/';
 
 export const WEBSITE_URL = import.meta.env.PROD
-  ? 'https://bodyfuel.onrender.com/'
+  ? 'https://bode-fuel-gui.vercel.app/'
   : 'http://localhost:3000/';
 
 export const DOWNLOAD_BASE_URL = useRemote
