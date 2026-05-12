@@ -1,0 +1,38 @@
+.moneyInput {
+  width: 100%;
+}
+
+.moneyInput input {
+  text-align: right;
+}
+
+@media print {
+  .ant-layout-sider,
+  .ant-layout-header,
+  .ant-page-header-back-button,
+  .ant-page-header-extra,
+  .ant-divider,
+  .ant-btn {
+    display: none !important;
+  }
+
+  .ant-layout-content {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff !important;
+  }
+
+  .ant-page-header {
+    padding: 10px 0 !important;
+  }
+
+  .whiteBox {
+    box-shadow: none !important;
+    border: none !important;
+    padding: 0 !important;
+  }
+
+  body {
+    background-color: #fff !important;
+  }
+}
