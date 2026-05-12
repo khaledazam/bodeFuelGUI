@@ -5,9 +5,14 @@ import SelectAsync from '@/components/SelectAsync';
 import MoneyInputFormItem from '@/components/MoneyInputFormItem';
 import QRScannerModal from '@/components/QRScannerModal';
 
+import { useSelector } from 'react-redux';
+import { selectCurrentAdmin } from '@/redux/auth/selectors';
+
 export default function ProductForm({ isUpdateForm = false }) {
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const form = Form.useFormInstance();
+  const currentAdmin = useSelector(selectCurrentAdmin);
+  const isCashier = currentAdmin?.role === 'cashier';
 
   const handleScanSuccess = (decodedText) => {
     if (form) {
@@ -63,17 +68,19 @@ export default function ProductForm({ isUpdateForm = false }) {
         </Col>
       </Row>
       <Row gutter={[12, 12]}>
-        <Col xs={24} sm={12} md={12}>
-          <Form.Item name="costPrice" label="سعر التكلفة (سعر الجملة)" rules={[{ required: true }]}>
-            <InputNumber
-              style={{ width: '100%' }}
-              placeholder="0"
-              size="large"
-              parser={(val) => val?.replace(',', '.')}
-            />
-          </Form.Item>
-        </Col>
-        <Col xs={24} sm={12} md={12}>
+        {!isCashier && (
+          <Col xs={24} sm={12} md={12}>
+            <Form.Item name="costPrice" label="سعر التكلفة (سعر الجملة)" rules={[{ required: true }]}>
+              <InputNumber
+                style={{ width: '100%' }}
+                placeholder="0"
+                size="large"
+                parser={(val) => val?.replace(',', '.')}
+              />
+            </Form.Item>
+          </Col>
+        )}
+        <Col xs={24} sm={12} md={!isCashier ? 12 : 24}>
           <Form.Item name="sellPrice" label="سعر البيع" rules={[{ required: true }]}>
              <InputNumber
               style={{ width: '100%' }}
