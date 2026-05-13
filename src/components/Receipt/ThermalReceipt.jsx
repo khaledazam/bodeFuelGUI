@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Button, Table, Divider, Input, Space } from 'antd';
-import { PrinterOutlined, CloseOutlined } from '@ant-design/icons';
+import { Modal, Button, Table, Divider, Input, Space, Row, Col, QRCode } from 'antd';
+import { PrinterOutlined, CloseOutlined, FacebookOutlined, InstagramOutlined, WhatsAppOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import '@/style/thermalPrint.css';
+
+// Import logo if possible or use public path
+import logoIcon from '@/style/images/finallLogo.svg';
 
 export default function ThermalReceipt({ open, onCancel, orderData }) {
   const [customerName, setCustomerName] = useState('');
@@ -13,12 +16,11 @@ export default function ThermalReceipt({ open, onCancel, orderData }) {
     }
   }, [orderData]);
 
-  // Auto-trigger print when modal opens
   useEffect(() => {
     if (open && orderData) {
       const timer = setTimeout(() => {
         window.print();
-      }, 800); // Small delay to ensure content is rendered
+      }, 1000);
       return () => clearTimeout(timer);
     }
   }, [open, orderData]);
@@ -29,12 +31,50 @@ export default function ThermalReceipt({ open, onCancel, orderData }) {
     window.print();
   };
 
+  const columns = [
+    {
+      title: 'م',
+      dataIndex: 'index',
+      key: 'index',
+      width: 30,
+      render: (_, __, index) => index + 1,
+    },
+    {
+      title: 'الصنف',
+      dataIndex: ['product', 'name'],
+      key: 'name',
+      render: (text) => <span style={{ fontSize: '11px', fontWeight: 600 }}>{text}</span>,
+    },
+    {
+      title: 'الكمية',
+      dataIndex: 'quantity',
+      key: 'quantity',
+      align: 'center',
+    },
+    {
+      title: 'السعر',
+      dataIndex: 'price',
+      key: 'price',
+      align: 'left',
+      render: (val) => (val || 0).toFixed(2),
+    },
+    {
+      title: 'الإجمالي',
+      dataIndex: 'total',
+      key: 'total',
+      align: 'left',
+      render: (val) => (val || 0).toFixed(2),
+    },
+  ];
+
+  const subTotal = (orderData.totalAmount || 0) - (orderData.deliveryFee || 0);
+
   return (
     <Modal
-      title="فاتورة حرارية (80mm)"
+      title="معاينة الطباعة"
       open={open}
       onCancel={onCancel}
-      width={400}
+      width={450}
       footer={[
         <Button key="cancel" icon={<CloseOutlined />} onClick={onCancel}>
           إغلاق
@@ -46,79 +86,133 @@ export default function ThermalReceipt({ open, onCancel, orderData }) {
           onClick={handlePrint}
           className="no-print"
         >
-          طباعة الفاتورة
+          طباعة الآن
         </Button>,
       ]}
       centered
       destroyOnClose
     >
       <div id="thermal-receipt" className="receipt-container">
+        {/* ── Logo & Header ──────────────── */}
         <div className="receipt-header">
-          <h2>مكملاتك الغذائية - Supplements Shop</h2>
-          <p>أفضل جودة.. لأفضل أداء</p>
-          <p>تاريخ الطلب: {dayjs(orderData.orderDate || orderData.created).format('YYYY-MM-DD HH:mm')}</p>
+          <img src={logoIcon} alt="Logo" style={{ width: 100, marginBottom: 5 }} />
+          <h2 style={{ fontWeight: 900, fontSize: 24, letterSpacing: 1, margin: 0 }}>BODYFUEL</h2>
+          <p style={{ fontSize: 11, fontWeight: 600, margin: 0 }}>SUPPLEMENTS STORE</p>
         </div>
 
-        <Divider dashed />
+        <Divider dashed style={{ margin: '10px 0' }} />
 
-        <div className="receipt-info">
-          <p><strong>رقم الفاتورة:</strong> {orderData.invoiceNumber}</p>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-            <span><strong>العميل:</strong></span>
-            <Input 
-              value={customerName} 
-              onChange={(e) => setCustomerName(e.target.value)} 
-              variant="borderless"
-              className="no-print"
-              style={{ width: 'fit-content', padding: 0, fontWeight: 'bold' }}
-            />
-            {/* Display static name for printing */}
-            <span style={{ display: 'none', visibility: 'visible' }} className="print-only">
-               {customerName}
-            </span>
-          </div>
+        {/* ── Order Info ─────────────────── */}
+        <div className="receipt-info-grid">
+          <Row>
+            <Col span={10} className="label">رقم الفاتورة :</Col>
+            <Col span={14} className="value">{orderData.invoiceNumber}</Col>
+          </Row>
+          <Row>
+            <Col span={10} className="label">التاريخ :</Col>
+            <Col span={14} className="value">
+              {dayjs(orderData.orderDate || orderData.created).format('DD/MM/YYYY hh:mm A')}
+            </Col>
+          </Row>
+          <Row>
+            <Col span={10} className="label">الكاشير :</Col>
+            <Col span={14} className="value">{orderData.cashier?.name || 'كاشير 1'}</Col>
+          </Row>
+          <Row className="no-print">
+            <Col span={10} className="label">العميل :</Col>
+            <Col span={14}>
+              <Input 
+                value={customerName} 
+                onChange={(e) => setCustomerName(e.target.value)} 
+                variant="borderless"
+                size="small"
+                style={{ padding: 0, fontWeight: 'bold' }}
+              />
+            </Col>
+          </Row>
+          <Row style={{ display: 'none' }} className="print-only">
+             <Col span={10} className="label">العميل :</Col>
+             <Col span={14} className="value">{customerName}</Col>
+          </Row>
         </div>
 
-        <table className="receipt-table">
-          <thead>
-            <tr>
-              <th>الصنف</th>
-              <th style={{ textAlign: 'center' }}>كمية</th>
-              <th style={{ textAlign: 'left' }}>إجمالي</th>
-            </tr>
-          </thead>
-          <tbody>
-            {orderData.items?.map((item, index) => (
-              <tr key={index}>
-                <td style={{ fontSize: '11px' }}>{item.product?.name || 'منتج غير معروف'}</td>
-                <td style={{ textAlign: 'center' }}>{item.quantity}</td>
-                <td style={{ textAlign: 'left' }}>{(item.total || 0).toFixed(2)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <Divider dashed style={{ margin: '10px 0' }} />
 
-        <div className="receipt-total">
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
-            <span>إجمالي الطلب:</span>
-            <span>{(orderData.totalAmount || 0).toFixed(2)} ج.م</span>
-          </div>
-          {orderData.credit > 0 && (
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
-              <span>تم دفعه (مقدماً):</span>
-              <span>-{(orderData.credit || 0).toFixed(2)} ج.م</span>
-            </div>
+        {/* ── Items Table ────────────────── */}
+        <Table
+          columns={columns}
+          dataSource={orderData.items}
+          pagination={false}
+          size="small"
+          className="receipt-table-v2"
+          rowKey={(record, index) => index}
+        />
+
+        <Divider dashed style={{ margin: '10px 0' }} />
+
+        {/* ── Totals ──────────────────────── */}
+        <div className="receipt-totals-v2">
+          <Row>
+            <Col span={16} className="label">الإجمالي الفرعي :</Col>
+            <Col span={8} className="value">{subTotal.toFixed(2)}</Col>
+          </Row>
+          {orderData.discount > 0 && (
+            <Row>
+              <Col span={16} className="label">خصم :</Col>
+              <Col span={8} className="value">{orderData.discount.toFixed(2)}</Col>
+            </Row>
           )}
-          <Divider style={{ margin: '5px 0' }} />
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold', fontSize: '14px' }}>
-            <span>المطلوب تحصيله:</span>
-            <span>{((orderData.totalAmount || 0) - (orderData.credit || 0)).toFixed(2)} ج.م</span>
+          {orderData.deliveryFee > 0 && (
+            <Row>
+              <Col span={16} className="label">رسوم الشحن :</Col>
+              <Col span={8} className="value">{orderData.deliveryFee.toFixed(2)}</Col>
+            </Row>
+          )}
+          
+          <Row className="grand-total-row">
+            <Col span={16} className="label">الإجمالي الكلي :</Col>
+            <Col span={8} className="value">{(orderData.totalAmount || 0).toFixed(2)}</Col>
+          </Row>
+
+          <div style={{ marginTop: 10 }}>
+             <Row>
+               <Col span={16} className="label">طريقة الدفع :</Col>
+               <Col span={8} className="value">{orderData.paymentMethod || 'نقداً'}</Col>
+             </Row>
+             <Row>
+               <Col span={16} className="label">تم الدفع :</Col>
+               <Col span={8} className="value">{(orderData.credit || 0).toFixed(2)}</Col>
+             </Row>
+             <Row>
+               <Col span={16} className="label">المتبقي :</Col>
+               <Col span={8} className="value">
+                 {Math.max(0, (orderData.totalAmount || 0) - (orderData.credit || 0)).toFixed(2)}
+               </Col>
+             </Row>
           </div>
         </div>
 
-        <div className="receipt-footer">
-          <p>شكراً لزيارتكم!</p>
-          <p>يرجى الاحتفاظ بالفاتورة للاستبدال</p>
+        <Divider dashed style={{ margin: '20px 0 10px 0' }} />
+
+        {/* ── Footer ─────────────────────── */}
+        <div className="receipt-footer-v2">
+          <Row align="middle" gutter={10}>
+            <Col span={8}>
+              <QRCode value={orderData.invoiceNumber} size={70} bordered={false} />
+            </Col>
+            <Col span={16}>
+              <p style={{ fontWeight: 700, margin: '0 0 5px 0' }}>شكراً لثقتك بنا</p>
+              <p style={{ fontSize: 10, margin: 0 }}>نتمنى لك يوماً رياضياً سعيداً ❤️</p>
+            </Col>
+          </Row>
+          
+          <div className="social-icons">
+             <Space size="large" style={{ marginTop: 15, fontSize: 16 }}>
+               <WhatsAppOutlined />
+               <InstagramOutlined />
+               <FacebookOutlined />
+             </Space>
+          </div>
         </div>
       </div>
 
@@ -126,7 +220,7 @@ export default function ThermalReceipt({ open, onCancel, orderData }) {
         {`
           @media print {
             .print-only {
-              display: inline !important;
+              display: flex !important;
               visibility: visible !important;
             }
           }

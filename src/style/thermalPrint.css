@@ -2,39 +2,29 @@
 
 /* Global printing style - only for the receipt */
 @media print {
-    /* Hide EVERYTHING by default */
     body * {
         visibility: hidden;
     }
 
-    /* Show only the receipt container and its children */
     #thermal-receipt, #thermal-receipt * {
         visibility: visible;
     }
 
-    /* Position the receipt at the very top-left */
     #thermal-receipt {
         position: absolute;
         left: 0;
         top: 0;
         width: 80mm;
         margin: 0;
-        padding: 5mm;
+        padding: 4mm;
         background: white;
     }
 
-    /* Adjust page size for thermal printer */
     @page {
         size: 80mm auto;
         margin: 0;
     }
 
-    /* Hide the modal overlay/buttons during print */
-    .ant-modal-mask,
-    .ant-modal-wrap,
-    .ant-modal-header,
-    .ant-modal-footer,
-    .ant-modal-close,
     .no-print {
         display: none !important;
     }
@@ -42,66 +32,86 @@
 
 /* Screen and Modal layout */
 .receipt-container {
-    font-family: 'Arial', sans-serif;
+    font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
     width: 100%;
     max-width: 80mm;
     margin: 0 auto;
-    padding: 10px;
+    padding: 15px;
     background: #fff;
-    border: 1px dashed #ccc;
-    direction: rtl; /* Force RTL for Arabic */
+    direction: rtl;
+    color: #000;
 }
 
 .receipt-header {
     text-align: center;
-    margin-bottom: 20px;
+    margin-bottom: 10px;
 }
 
-.receipt-header h2 {
-    margin: 0;
-    font-size: 20px;
+.receipt-info-grid {
+    font-size: 13px;
+    line-height: 1.8;
 }
 
-.receipt-info {
-    margin-bottom: 15px;
-    font-size: 14px;
-    border-bottom: 1px dashed #eee;
-    padding-bottom: 10px;
+.receipt-info-grid .label {
+    font-weight: 600;
+    color: #333;
 }
 
-.receipt-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 15px;
-}
-
-.receipt-table th {
-    text-align: right;
-    border-bottom: 2px solid #333;
-    padding: 5px 0;
-    font-size: 12px;
-}
-
-.receipt-table td {
-    padding: 8px 0;
-    font-size: 12px;
-    border-bottom: 1px solid #eee;
-}
-
-.receipt-total {
+.receipt-info-grid .value {
     text-align: left;
-    font-weight: bold;
-    font-size: 16px;
-    margin-top: 10px;
-    border-top: 2px solid #333;
-    padding-top: 10px;
+    font-weight: 700;
 }
 
-.receipt-footer {
+/* Table Customization */
+.receipt-table-v2 .ant-table {
+    background: transparent;
+    font-size: 11px;
+}
+
+.receipt-table-v2 .ant-table-thead > tr > th {
+    background: #f9f9f9;
+    padding: 8px 4px;
+    font-weight: 900;
+    border-bottom: 2px solid #000;
+}
+
+.receipt-table-v2 .ant-table-tbody > tr > td {
+    padding: 8px 4px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.receipt-totals-v2 {
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.receipt-totals-v2 .label {
+    text-align: right;
+    padding-left: 10px;
+}
+
+.receipt-totals-v2 .value {
+    text-align: left;
+    font-weight: 700;
+}
+
+.grand-total-row {
+    margin-top: 5px;
+    padding: 5px 0;
+    border-top: 1px solid #000;
+    border-bottom: 1px solid #000;
+    font-size: 18px;
+    font-weight: 900;
+    color: #d32f2f; /* Red color for the total */
+}
+
+.receipt-footer-v2 {
     text-align: center;
-    margin-top: 30px;
-    font-size: 12px;
-    font-style: italic;
-    border-top: 1px dashed #ccc;
+    margin-top: 10px;
+}
+
+.social-icons {
+    border-top: 1px dashed #ddd;
     padding-top: 10px;
+    opacity: 0.8;
 }
