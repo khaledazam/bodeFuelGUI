@@ -259,8 +259,19 @@ export default function ReadOrderModule({ config }) {
 
       <Divider dashed />
 
-      {/* ── Customer info ─────────────────────── */}
-      <Descriptions title={`العميل: ${customerName}`}>
+      {/* ── Order info & Customer info ─────────────────────── */}
+      <Descriptions title={`العميل: ${customerName}`} bordered size="small" column={{ xs: 1, sm: 2, md: 3 }}>
+        <Descriptions.Item label="نوع الطلب">
+          <Tag color={order.orderType === 'delivery' ? 'purple' : 'blue'}>
+            {order.orderType === 'delivery' ? 'توصيل (Delivery)' : 'شراء من المحل (Store)'}
+          </Tag>
+        </Descriptions.Item>
+        <Descriptions.Item label="طريقة الدفع">
+          <Tag color="cyan">{order.paymentMethod || 'نقداً'}</Tag>
+        </Descriptions.Item>
+        <Descriptions.Item label="الكاشير">
+          {order.cashier?.name || order.cashier?.email || '—'}
+        </Descriptions.Item>
         {typeof order.customer === 'object' && order.customer !== null && (
           <>
             {order.customer.email && (
@@ -307,10 +318,34 @@ export default function ReadOrderModule({ config }) {
 
       {/* ── Totals ────────────────────────────── */}
       <div style={{ width: 300, float: 'right', textAlign: 'right', fontWeight: 700, marginTop: 16 }}>
-        <Row gutter={[12, -5]}>
-          <Col span={12}><p>الإجمالي :</p></Col>
+        <Row gutter={[12, 8]}>
+          <Col span={12}><p>الإجمالي الفرعي :</p></Col>
           <Col span={12}>
-            <p>{moneyFormatter({ amount: order.totalAmount || 0 })}</p>
+            <p>{moneyFormatter({ amount: (order.totalAmount || 0) - (order.deliveryFee || 0) })}</p>
+          </Col>
+          {order.orderType === 'delivery' && (
+            <>
+              <Col span={12}><p>رسوم التوصيل :</p></Col>
+              <Col span={12}>
+                <p>{moneyFormatter({ amount: order.deliveryFee || 0 })}</p>
+              </Col>
+            </>
+          )}
+          <Divider style={{ margin: '4px 0' }} />
+          <Col span={12}><p style={{ fontSize: '16px' }}>إجمالي الطلب :</p></Col>
+          <Col span={12}>
+            <p style={{ fontSize: '16px' }}>{moneyFormatter({ amount: order.totalAmount || 0 })}</p>
+          </Col>
+          <Col span={12}><p>تم دفعه (مقدماً) :</p></Col>
+          <Col span={12}>
+            <p>{moneyFormatter({ amount: order.credit || 0 })}</p>
+          </Col>
+          <Divider style={{ margin: '4px 0' }} />
+          <Col span={12}><p style={{ fontSize: '18px', color: '#52c41a' }}>المتبقي للتحصيل :</p></Col>
+          <Col span={12}>
+            <p style={{ fontSize: '18px', color: '#52c41a' }}>
+              {moneyFormatter({ amount: (order.totalAmount || 0) - (order.credit || 0) })}
+            </p>
           </Col>
         </Row>
       </div>

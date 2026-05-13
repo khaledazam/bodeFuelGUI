@@ -18,6 +18,7 @@ import {
   ShopOutlined,
   BarChartOutlined,
   MenuOutlined,
+  FileSyncOutlined,
 } from '@ant-design/icons';
 
 import { useSelector } from 'react-redux';
@@ -64,6 +65,11 @@ function Sidebar({ collapsible, isMobile = false }) {
       label: <Link to={'/inventory'}>المخزون والجرد</Link>,
     },
     {
+      key: 'inventorylog',
+      icon: <FileSyncOutlined />,
+      label: <Link to={'/inventorylog'}>سجل حركات المخزن</Link>,
+    },
+    {
       key: 'customer',
       icon: <CustomerServiceOutlined />,
       label: <Link to={'/customer'}>العملاء</Link>,
@@ -102,7 +108,7 @@ function Sidebar({ collapsible, isMobile = false }) {
 
   if (currentAdmin?.role === 'cashier') {
     items = items.filter(
-      (item) => !['generalSettings', 'reports', 'supplier', 'inventory'].includes(item.key)
+      (item) => !['generalSettings', 'reports', 'supplier', 'inventory', 'inventorylog'].includes(item.key)
     );
   }
 

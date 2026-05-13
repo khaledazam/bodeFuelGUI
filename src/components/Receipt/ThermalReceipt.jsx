@@ -99,9 +99,20 @@ export default function ThermalReceipt({ open, onCancel, orderData }) {
         </table>
 
         <div className="receipt-total">
-          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-            <span>إجمالي الفاتورة:</span>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
+            <span>إجمالي الطلب:</span>
             <span>{(orderData.totalAmount || 0).toFixed(2)} ج.م</span>
+          </div>
+          {orderData.credit > 0 && (
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
+              <span>تم دفعه (مقدماً):</span>
+              <span>-{(orderData.credit || 0).toFixed(2)} ج.م</span>
+            </div>
+          )}
+          <Divider style={{ margin: '5px 0' }} />
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold', fontSize: '14px' }}>
+            <span>المطلوب تحصيله:</span>
+            <span>{((orderData.totalAmount || 0) - (orderData.credit || 0)).toFixed(2)} ج.م</span>
           </div>
         </div>
 

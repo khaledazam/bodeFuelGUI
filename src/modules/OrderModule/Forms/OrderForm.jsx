@@ -31,9 +31,13 @@ function LoadOrderForm({ subTotal = 0, current = null }) {
   const [lastNumber, setLastNumber] = useState(() => last_invoice_number + 1);
   const { isMobile } = useResponsive();
 
-  const handelTaxChange = (value) => {
-    setTaxRate(value / 100);
-  };
+  const orderType = Form.useWatch('orderType');
+  const deliveryFee = Form.useWatch('deliveryFee') || 0;
+
+  const toNumber = (v) =>
+    v === '' || v === null || v === undefined
+      ? 0
+      : Number(String(v).replace(',', '.'));
 
   useEffect(() => {
     if (current) {
@@ -45,10 +49,11 @@ function LoadOrderForm({ subTotal = 0, current = null }) {
   }, [current]);
 
   useEffect(() => {
-    const currentTotal = calculate.add(calculate.multiply(subTotal, taxRate), subTotal);
+    const fee = orderType === 'delivery' ? toNumber(deliveryFee) : 0;
+    const currentTotal = calculate.add(calculate.multiply(subTotal, taxRate), calculate.add(subTotal, fee));
     setTaxTotal(Number.parseFloat(calculate.multiply(subTotal, taxRate)));
     setTotal(Number.parseFloat(currentTotal));
-  }, [subTotal, taxRate]);
+  }, [subTotal, taxRate, deliveryFee, orderType]);
 
   const addField = useRef(false);
 
@@ -80,6 +85,53 @@ function LoadOrderForm({ subTotal = 0, current = null }) {
         </Col>
         <Col xs={24} sm={12} md={5}>
           <Form.Item
+            label="نوع الطلب"
+            name="orderType"
+            rules={[{ required: true }]}
+            initialValue={'store'}
+          >
+            <Select
+              options={[
+                { value: 'store', label: 'شراء من المحل (Store)' },
+                { value: 'delivery', label: 'توصيل (Delivery)' },
+              ]}
+            ></Select>
+          </Form.Item>
+        </Col>
+
+        {orderType === 'delivery' && (
+          <Col xs={24} sm={12} md={3}>
+            <Form.Item
+              label="رسوم التوصيل"
+              name="deliveryFee"
+              rules={[{ required: true, message: 'مطلوب' }]}
+              initialValue={0}
+            >
+              <MoneyInputFormItem />
+            </Form.Item>
+          </Col>
+        )}
+
+        <Col xs={24} sm={12} md={5}>
+          <Form.Item
+            label="طريقة الدفع"
+            name="paymentMethod"
+            rules={[{ required: true }]}
+            initialValue={'cash'}
+          >
+            <Select
+              options={[
+                { value: 'cash', label: 'نقداً (Cash)' },
+                { value: 'card', label: 'بطاقة (Card)' },
+                { value: 'instapay', label: 'Instapay' },
+                { value: 'vodafone', label: 'Vodafone Cash' },
+              ]}
+            ></Select>
+          </Form.Item>
+        </Col>
+
+        <Col xs={24} sm={12} md={5}>
+          <Form.Item
             label="حالة الطلب"
             name="orderStatus"
             rules={[{ required: true }]}
@@ -98,7 +150,18 @@ function LoadOrderForm({ subTotal = 0, current = null }) {
           </Form.Item>
         </Col>
 
-        <Col xs={24} sm={12} md={8}>
+        <Col xs={24} sm={12} md={5}>
+          <Form.Item
+            label="المبلغ المدفوع (مقدماً)"
+            name="credit"
+            initialValue={0}
+            tooltip="المبلغ الذي دفعه العميل فعلياً الآن (مثل رسوم الشحن عبر إنستا باي)"
+          >
+            <MoneyInputFormItem />
+          </Form.Item>
+        </Col>
+
+        <Col xs={24} sm={12} md={5}>
           <Form.Item
             name="orderDate"
             label="تاريخ الطلب"

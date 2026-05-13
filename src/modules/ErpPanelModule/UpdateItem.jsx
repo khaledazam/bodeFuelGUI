@@ -97,6 +97,17 @@ export default function UpdateItem({ config, UpdateForm }) {
         });
       }
 
+      // Calculate totalAmount — required by Order schema
+      let computedTotal = 0;
+      if (dataToUpdate.items) {
+        dataToUpdate.items.forEach((item) => {
+          computedTotal = calculate.add(computedTotal, item.total);
+        });
+      }
+      const deliveryFee = dataToUpdate.orderType === 'delivery' ? toNumber(dataToUpdate.deliveryFee) : 0;
+      dataToUpdate.deliveryFee = deliveryFee;
+      dataToUpdate.totalAmount = calculate.add(toNumber(computedTotal), deliveryFee);
+
       // Top level numeric fields
       const numericFields = ['taxRate', 'number', 'year'];
       numericFields.forEach(field => {

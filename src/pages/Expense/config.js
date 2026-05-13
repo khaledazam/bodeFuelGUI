@@ -12,6 +12,7 @@ export const fields = {
       { value: 'rent', label: 'إيجار' },
       { value: 'maintenance', label: 'صيانة وتصليح' },
       { value: 'petty_cash', label: 'نثريات' },
+      { value: 'stock_purchase', label: 'شراء بضاعة / مخزون' },
       { value: 'other', label: 'أخرى' },
     ],
   },

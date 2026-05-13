@@ -132,7 +132,9 @@ export default function CreateItem({ config, CreateForm }) {
     }
 
     // ── Inject totalAmount — required by Order schema ──────────
-    cleanedValues.totalAmount = toNumber(computedTotal);
+    const deliveryFee = cleanedValues.orderType === 'delivery' ? toNumber(cleanedValues.deliveryFee) : 0;
+    cleanedValues.deliveryFee = deliveryFee;
+    cleanedValues.totalAmount = calculate.add(toNumber(computedTotal), deliveryFee);
 
     // Top level numeric fields
     const numericFields = ['taxRate', 'number', 'year'];

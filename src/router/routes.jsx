@@ -21,6 +21,7 @@ const Reports = lazy(() => import('@/pages/Reports'));
 const Settings = lazy(() => import('@/pages/Settings/Settings'));
 
 const Expense = lazy(() => import('@/pages/Expense'));
+const InventoryLog = lazy(() => import('@/pages/InventoryLog'));
 const Dashboard = lazy(() => import('@/pages/Dashboard'));
 
 let routes = {
@@ -37,6 +38,10 @@ let routes = {
     {
       path: '/',
       element: <Dashboard />,
+    },
+    {
+      path: '/inventorylog',
+      element: <InventoryLog />,
     },
     {
       path: '/customer',

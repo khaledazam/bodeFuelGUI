@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { Tag, Row, Col, List, Avatar, Card, Statistic, Table, Divider, Badge } from 'antd';
+import { useEffect, useState, useCallback } from 'react';
+import { Tag, Row, Col, List, Avatar, Card, Statistic, Table, Divider, Badge, DatePicker, Button, Space } from 'antd';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { 
   DollarCircleOutlined, 
@@ -7,7 +7,9 @@ import {
   WarningOutlined, 
   OrderedListOutlined,
   HourglassOutlined,
-  ArrowUpOutlined 
+  ArrowUpOutlined,
+  FileExcelOutlined,
+  FilterOutlined
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 
@@ -18,9 +20,12 @@ import useFetch from '@/hooks/useFetch';
 import useOnFetch from '@/hooks/useOnFetch';
 import RecentTable from './components/RecentTable';
 
+const { RangePicker } = DatePicker;
+
 export default function DashboardModule() {
   const translate = useLanguage();
   const { moneyFormatter } = useMoney();
+  const [dateRange, setDateRange] = useState([dayjs().startOf('month'), dayjs().endOf('day')]);
 
   const {
     result: summaryResult,
@@ -28,14 +33,71 @@ export default function DashboardModule() {
     onFetch: fetchSummary,
   } = useOnFetch();
 
+  const loadSummary = useCallback((dates) => {
+    const [start, end] = dates || [dayjs().startOf('month'), dayjs().endOf('day')];
+    fetchSummary(request.get({ 
+      entity: 'dashboard/summary', 
+      options: { 
+        startDate: start.format('YYYY-MM-DD'), 
+        endDate: end.format('YYYY-MM-DD') 
+      } 
+    }));
+  }, [fetchSummary]);
+
   const {
     result: inventoryResult,
     isLoading: inventoryLoading,
   } = useFetch(() => request.list({ entity: 'inventory' }));
 
   useEffect(() => {
-    fetchSummary(request.get({ entity: 'dashboard/summary' }));
-  }, []);
+    loadSummary(dateRange);
+  }, [loadSummary]);
+
+  const onDateChange = (dates) => {
+    setDateRange(dates);
+    loadSummary(dates);
+  };
+
+  const exportToExcel = async () => {
+    try {
+      const [start, end] = dateRange;
+      const response = await request.get({ 
+        entity: 'order/list', 
+        options: { 
+          filter: `orderDate[gte]=${start.startOf('day').toISOString()}&orderDate[lte]=${end.endOf('day').toISOString()}`
+        } 
+      });
+
+      if (response.success && response.result) {
+        const data = response.result.map(order => ({
+          'رقم الفاتورة': order.invoiceNumber,
+          'التاريخ': dayjs(order.orderDate).format('YYYY-MM-DD HH:mm'),
+          'العميل': order.customer?.name || '—',
+          'نوع الطلب': order.orderType === 'delivery' ? 'توصيل' : 'محل',
+          'رسوم الشحن': order.deliveryFee || 0,
+          'الإجمالي': order.totalAmount || 0,
+          'طريقة الدفع': order.paymentMethod || '—',
+          'الكاشير': order.cashier?.name || '—',
+        }));
+
+        const csvContent = "\uFEFF" + [
+          Object.keys(data[0]).join(","),
+          ...data.map(row => Object.values(row).join(","))
+        ].join("\n");
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.setAttribute("href", url);
+        link.setAttribute("download", `تقرير_المبيعات_${start.format('YYYY-MM-DD')}_إلى_${end.format('YYYY-MM-DD')}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+    } catch (error) {
+      console.error('Export failed', error);
+    }
+  };
 
   const stats = summaryResult?.stats || {};
   const timeline = summaryResult?.timeline || [];
@@ -63,14 +125,60 @@ export default function DashboardModule() {
 
   return (
     <div className="dashboard-container">
+      <Row gutter={[24, 24]} style={{ marginBottom: 24 }}>
+        <Col span={24}>
+          <Card bordered={false} className="shadow-sm">
+            <Row justify="space-between" align="middle">
+              <Col>
+                <Space size="middle">
+                  <FilterOutlined style={{ fontSize: 18, color: '#1890ff' }} />
+                  <span style={{ fontWeight: 600 }}>تصفية النتائج:</span>
+                  <RangePicker 
+                    value={dateRange} 
+                    onChange={onDateChange} 
+                    format="YYYY-MM-DD"
+                    allowClear={false}
+                    size="large"
+                  />
+                </Space>
+              </Col>
+              <Col>
+                <Button 
+                  type="primary" 
+                  icon={<FileExcelOutlined />} 
+                  onClick={exportToExcel}
+                  size="large"
+                  ghost
+                >
+                  استخراج تقرير Excel
+                </Button>
+              </Col>
+            </Row>
+          </Card>
+        </Col>
+      </Row>
+
       <Row gutter={[24, 24]}>
         <Col xs={24} sm={12} lg={6}>
           <Card bordered={false} className="shadow-sm border-left-success">
             <Statistic
-              title={translate('total_revenue_month') || 'إجمالي المبيعات'}
+              title={translate('total_revenue') || 'إجمالي المبيعات'}
               value={stats.totalRevenue}
               prefix={<DollarCircleOutlined style={{ color: '#52c41a' }} />}
               formatter={(val) => moneyFormatter({ amount: val })}
+              loading={summaryLoading}
+            />
+          </Card>
+        </Col>
+
+        <Col xs={24} sm={12} lg={6}>
+          <Card bordered={false} className="shadow-sm">
+            <Statistic
+              title={'أرباح الشحن (Delivery)'}
+              value={stats.totalDelivery}
+              prefix={<ShoppingOutlined style={{ color: '#722ed1' }} />}
+              formatter={(val) => moneyFormatter({ amount: val })}
+              loading={summaryLoading}
             />
           </Card>
         </Col>
@@ -83,6 +191,7 @@ export default function DashboardModule() {
                 value={stats.grossProfit}
                 prefix={<DollarCircleOutlined style={{ color: '#1890ff' }} />}
                 formatter={(val) => moneyFormatter({ amount: val })}
+                loading={summaryLoading}
               />
             </Card>
           </Col>
@@ -96,19 +205,7 @@ export default function DashboardModule() {
                 value={stats.totalExpense}
                 prefix={<ArrowUpOutlined style={{ color: '#cf1322' }} />}
                 formatter={(val) => moneyFormatter({ amount: val })}
-              />
-            </Card>
-          </Col>
-        )}
-
-        {stats.netProfit !== undefined && (
-          <Col xs={24} sm={12} lg={6}>
-            <Card bordered={false} className="shadow-sm">
-              <Statistic
-                title={'صافي الأرباح'}
-                value={stats.netProfit}
-                prefix={<DollarCircleOutlined style={{ color: '#52c41a' }} />}
-                formatter={(val) => moneyFormatter({ amount: val })}
+                loading={summaryLoading}
               />
             </Card>
           </Col>
