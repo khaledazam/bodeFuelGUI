@@ -37,6 +37,15 @@ export default function Order() {
       render: (total) => moneyFormatter({ amount: total }),
     },
     {
+      title: 'نوع الطلب',
+      dataIndex: 'orderType',
+      render: (type) => {
+        let color = type === 'delivery' ? 'magenta' : 'cyan';
+        let label = type === 'delivery' ? 'توصيل' : 'استلام محل';
+        return <Tag color={color}>{label}</Tag>;
+      },
+    },
+    {
       title: 'حالة الطلب',
       dataIndex: 'orderStatus',
       render: (status) => {

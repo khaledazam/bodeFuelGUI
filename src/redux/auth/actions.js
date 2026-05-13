@@ -107,33 +107,21 @@ export const resetPassword =
   };
 
 export const logout = () => async (dispatch) => {
+  // 1. Immediately clear frontend state
   dispatch({
     type: actionTypes.LOGOUT_SUCCESS,
   });
-  const result = window.localStorage.getItem('auth');
-  const tmpAuth = JSON.parse(result);
-  const settings = window.localStorage.getItem('settings');
-  const tmpSettings = JSON.parse(settings);
+  
   clearPersistedAuth();
   window.localStorage.removeItem('settings');
   window.localStorage.setItem('isLogout', JSON.stringify({ isLogout: true }));
-  const data = await authService.logout();
-  if (data.success === false) {
-    const auth_state = {
-      current: tmpAuth?.current || tmpAuth,
-      isLoggedIn: true,
-      isLoading: false,
-      isSuccess: true,
-    };
-    setPersistedAuth(auth_state);
-    window.localStorage.setItem('settings', JSON.stringify(tmpSettings));
-    window.localStorage.removeItem('isLogout');
-    dispatch({
-      type: actionTypes.LOGOUT_FAILED,
-      payload: data.result,
-    });
-  } else {
-    // on lgout success
+
+  // 2. Silently attempt to notify backend
+  try {
+    await authService.logout();
+  } catch (error) {
+    console.error('Backend logout failed', error);
+    // We don't revert here because the user wants to leave.
   }
 };
 
