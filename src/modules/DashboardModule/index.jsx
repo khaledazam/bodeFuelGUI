@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { Tag, Row, Col, List, Avatar, Card, Statistic, Table, Divider, Badge, DatePicker, Button, Space } from 'antd';
+import { Tag, Row, Col, List, Avatar, Card, Statistic, Table, Divider, Badge, DatePicker, Button, Space, Alert, Typography } from 'antd';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { 
   DollarCircleOutlined, 
@@ -157,6 +157,29 @@ export default function DashboardModule() {
           </Card>
         </Col>
       </Row>
+
+      {summaryResult?.lowStockList?.length > 0 && (
+        <Alert
+          message="تنبيه: يوجد أصناف أوشكت على النفاذ"
+          description={
+            <List
+              size="small"
+              dataSource={summaryResult.lowStockList}
+              renderItem={item => (
+                <List.Item key={item._id}>
+                  <Typography.Text strong>{item.product?.name}</Typography.Text>
+                  <Badge count={item.currentStock} style={{ backgroundColor: '#f5222d', marginRight: 10, marginLeft: 10 }} />
+                  <Typography.Text type="secondary">(الحد الأدنى: {item.lowStockThreshold})</Typography.Text>
+                </List.Item>
+              )}
+            />
+          }
+          type="warning"
+          showIcon
+          style={{ marginBottom: 24 }}
+          closable
+        />
+      )}
 
       <Row gutter={[24, 24]}>
         <Col xs={24} sm={12} lg={6}>

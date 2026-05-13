@@ -122,6 +122,41 @@ export default function AutoCompleteAsync({
     }
   }, [value]);
 
+  const renderOptions = () => {
+    if (entity === 'product') {
+      const groups = {};
+      selectOptions.forEach((opt) => {
+        const catName = opt.category?.name || 'غير مصنف';
+        if (!groups[catName]) groups[catName] = [];
+        groups[catName].push(opt);
+      });
+
+      return Object.keys(groups).map((groupName) => (
+        <Select.OptGroup key={groupName} label={groupName}>
+          {groups[groupName].map((optionField) => (
+            <Select.Option
+              key={optionField[outputValue] || optionField}
+              value={optionField[outputValue] || optionField}
+              {...optionField} // Pass all fields to the option for handleSelectChange
+            >
+              {labels(optionField)}
+            </Select.Option>
+          ))}
+        </Select.OptGroup>
+      ));
+    }
+
+    return selectOptions.map((optionField) => (
+      <Select.Option
+        key={optionField[outputValue] || optionField}
+        value={optionField[outputValue] || optionField}
+        {...optionField}
+      >
+        {labels(optionField)}
+      </Select.Option>
+    ));
+  };
+
   return (
     <Select
       loading={isLoading}
@@ -134,22 +169,12 @@ export default function AutoCompleteAsync({
       value={currentValue}
       onSearch={onSearch}
       onClear={() => {
-        // setOptions([]);
-        // setCurrentValue(undefined);
         setSearching(false);
       }}
       onChange={handleSelectChange}
       style={{ minWidth: '220px' }}
-      // onSelect={handleOnSelect}
     >
-      {selectOptions.map((optionField) => (
-        <Select.Option
-          key={optionField[outputValue] || optionField}
-          value={optionField[outputValue] || optionField}
-        >
-          {labels(optionField)}
-        </Select.Option>
-      ))}
+      {renderOptions()}
       {withRedirect && <Select.Option value={addNewValue.value}>{addNewValue.label}</Select.Option>}
     </Select>
   );
