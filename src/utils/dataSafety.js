@@ -25,6 +25,9 @@ export const safeValue = (value) => {
   // Handle Populated Objects (The primary source of React crashes)
   if (typeof value === 'object') {
     // If it's a Mongoose populated object, try to find a human-readable property
+    if (value?.name && value?.surname) {
+      return `${value.name} ${value.surname}`;
+    }
     return value?.name || value?.title || value?.label || value?.text || value?.username || '—';
   }
 

@@ -1,12 +1,25 @@
 import CrudModule from '@/modules/CrudModule/CrudModule';
 import DynamicForm from '@/forms/DynamicForm';
 import { fields } from './config';
+import { useSelector } from 'react-redux';
+import { selectCurrentAdmin } from '@/redux/auth/selectors';
 
 import useLanguage from '@/locale/useLanguage';
 
 export default function Expense() {
   const translate = useLanguage();
   const entity = 'expense';
+  
+  const currentAdmin = useSelector(selectCurrentAdmin);
+
+  let activeFields = { ...fields };
+  if (currentAdmin?.role === 'cashier') {
+    activeFields.user = {
+      ...fields.user,
+      disableForForm: true,
+      disableForUpdate: true,
+    };
+  }
   
   const searchConfig = {
     displayLabels: ['name', 'expenseCategory', 'amount'],
@@ -28,15 +41,15 @@ export default function Expense() {
   
   const config = {
     ...configPage,
-    fields,
+    fields: activeFields,
     searchConfig,
     deleteModalLabels,
   };
 
   return (
     <CrudModule
-      createForm={<DynamicForm fields={fields} />}
-      updateForm={<DynamicForm fields={fields} />}
+      createForm={<DynamicForm fields={activeFields} />}
+      updateForm={<DynamicForm fields={activeFields} isUpdateForm={true} />}
       config={config}
     />
   );

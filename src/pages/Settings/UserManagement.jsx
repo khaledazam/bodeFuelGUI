@@ -43,6 +43,7 @@ export default function UserManagement() {
       email: user.email,
       role: user.role,
       enabled: user.enabled,
+      salary: user.salary,
       password: '', // Reset password field
     });
     setIsModalOpen(true);
@@ -73,6 +74,7 @@ export default function UserManagement() {
           role: values.role,
           enabled: values.enabled,
           password: values.password,
+          salary: values.salary,
         },
       });
     } else {
@@ -85,6 +87,7 @@ export default function UserManagement() {
           email: values.email,
           role: values.role,
           password: values.password,
+          salary: values.salary,
         },
       });
     }
@@ -132,6 +135,41 @@ export default function UserManagement() {
           text = 'كاشير (Cashier)';
         }
         return <Tag color={color}>{text}</Tag>;
+      },
+    },
+    {
+      title: 'الراتب المحدد',
+      dataIndex: 'salary',
+      key: 'salary',
+      render: (salary, record) => {
+        if (record.role !== 'cashier') return '-';
+        return <span style={{ fontWeight: '500' }}>{salary ? `${salary} ج.م` : '0 ج.م'}</span>;
+      },
+    },
+    {
+      title: 'إجمالي المسحوبات',
+      dataIndex: 'totalWithdrawals',
+      key: 'totalWithdrawals',
+      render: (totalWithdrawals, record) => {
+        if (record.role !== 'cashier') return '-';
+        return (
+          <span style={{ color: totalWithdrawals > 0 ? '#ff4d4f' : '#8c8c8c', fontWeight: '500' }}>
+            {totalWithdrawals ? `${totalWithdrawals} ج.م` : '0 ج.م'}
+          </span>
+        );
+      },
+    },
+    {
+      title: 'الراتب المتبقي',
+      dataIndex: 'remainingSalary',
+      key: 'remainingSalary',
+      render: (remainingSalary, record) => {
+        if (record.role !== 'cashier') return '-';
+        return (
+          <span style={{ color: remainingSalary > 0 ? '#52c41a' : '#faad14', fontWeight: 'bold' }}>
+            {remainingSalary !== undefined ? `${remainingSalary} ج.م` : `${record.salary || 0} ج.م`}
+          </span>
+        );
       },
     },
     {
@@ -294,6 +332,20 @@ export default function UserManagement() {
               </Col>
             )}
           </Row>
+
+          <Form.Item noStyle shouldUpdate={(prevValues, currentValues) => prevValues.role !== currentValues.role}>
+            {({ getFieldValue }) =>
+              getFieldValue('role') === 'cashier' ? (
+                <Form.Item
+                  name="salary"
+                  label="الراتب المحدد"
+                  rules={[{ required: true, message: 'يرجى إدخال قيمة الراتب المحدد' }]}
+                >
+                  <Input type="number" min={0} placeholder="قيمة الراتب المحدد بالكامِل" addonAfter="ج.م" />
+                </Form.Item>
+              ) : null
+            }
+          </Form.Item>
 
           <Form.Item style={{ marginTop: '24px', marginBottom: 0, textAlign: 'left' }}>
             <Space>

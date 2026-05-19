@@ -16,6 +16,13 @@ export const fields = {
       { value: 'other', label: 'أخرى' },
     ],
   },
+  user: {
+    type: 'async',
+    entity: 'admin',
+    displayLabels: ['name', 'surname'],
+    outputValue: '_id',
+    label: 'employee_cashier',
+  },
   amount: {
     type: 'number',
     required: true,

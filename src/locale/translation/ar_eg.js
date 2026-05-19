@@ -129,6 +129,11 @@ const ar_eg = {
   are_you_sure_you_want_to_delete: 'هل أنت متأكد أنك تريد الحذف؟',
   error_404: 'خطأ 404',
   page_not_found: 'عذراً، الصفحة التي طلبتها غير موجودة',
+  expense: 'مصروف',
+  expense_category: 'تصنيف المصروف',
+  expense_list: 'قائمة المصروفات',
+  add_new_expense: 'إضافة مصروف جديد',
+  employee_cashier: 'الموظف / الكاشير',
 };
 
 export default ar_eg;
