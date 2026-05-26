@@ -9,22 +9,28 @@ export const login =
     dispatch({
       type: actionTypes.REQUEST_LOADING,
     });
-    const data = await authService.login({ loginData });
+    try {
+      const data = await authService.login({ loginData });
 
-    if (data.success === true) {
-      const auth_state = {
-        current: data.result,
-        isLoggedIn: true,
-        isLoading: false,
-        isSuccess: true,
-      };
-      setPersistedAuth(auth_state);
-      window.localStorage.removeItem('isLogout');
-      dispatch({
-        type: actionTypes.REQUEST_SUCCESS,
-        payload: data.result,
-      });
-    } else {
+      if (data.success === true) {
+        const auth_state = {
+          current: data.result,
+          isLoggedIn: true,
+          isLoading: false,
+          isSuccess: true,
+        };
+        setPersistedAuth(auth_state);
+        window.localStorage.removeItem('isLogout');
+        dispatch({
+          type: actionTypes.REQUEST_SUCCESS,
+          payload: data.result,
+        });
+      } else {
+        dispatch({
+          type: actionTypes.REQUEST_FAILED,
+        });
+      }
+    } catch (error) {
       dispatch({
         type: actionTypes.REQUEST_FAILED,
       });

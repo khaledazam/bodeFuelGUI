@@ -13,6 +13,8 @@ import {
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 
+import * as XLSX from 'xlsx';
+
 import useLanguage from '@/locale/useLanguage';
 import { useMoney } from '@/settings';
 import { request } from '@/request';
@@ -58,18 +60,39 @@ export default function DashboardModule() {
     loadSummary(dates);
   };
 
+
   const exportToExcel = async () => {
     try {
       const [start, end] = dateRange;
-      const response = await request.get({ 
-        entity: 'order/list', 
-        options: { 
-          filter: `orderDate[gte]=${start.startOf('day').toISOString()}&orderDate[lte]=${end.endOf('day').toISOString()}`
-        } 
+      const startIso = start.startOf('day').toISOString();
+      const endIso = end.endOf('day').toISOString();
+
+      const orderPromise = request.list({ 
+        entity: 'order', 
+        options: { filter: `orderDate[gte]=${startIso}&orderDate[lte]=${endIso}` } 
       });
 
-      if (response.success && response.result) {
-        const data = response.result.map(order => ({
+      const expensePromise = request.list({ 
+        entity: 'expense', 
+        options: { filter: `date[gte]=${startIso}&date[lte]=${endIso}` } 
+      });
+
+      const inventoryLogPromise = request.list({
+        entity: 'inventorylog',
+        options: { filter: `created[gte]=${startIso}&created[lte]=${endIso}` }
+      });
+
+      const results = await Promise.allSettled([orderPromise, expensePromise, inventoryLogPromise]);
+      const orderRes = results[0].status === 'fulfilled' ? results[0].value : null;
+      const expenseRes = results[1].status === 'fulfilled' ? results[1].value : null;
+      const inventoryRes = results[2].status === 'fulfilled' ? results[2].value : null;
+
+      const wb = XLSX.utils.book_new();
+
+      // 1. Orders Sheet
+      let orderData = [];
+      if (orderRes?.success && orderRes?.result && orderRes.result.length > 0) {
+        orderData = orderRes.result.map(order => ({
           'رقم الفاتورة': order.invoiceNumber,
           'التاريخ': dayjs(order.orderDate).format('YYYY-MM-DD HH:mm'),
           'العميل': order.customer?.name || '—',
@@ -79,21 +102,63 @@ export default function DashboardModule() {
           'طريقة الدفع': order.paymentMethod || '—',
           'الكاشير': order.cashier?.name || '—',
         }));
-
-        const csvContent = "\uFEFF" + [
-          Object.keys(data[0]).join(","),
-          ...data.map(row => Object.values(row).join(","))
-        ].join("\n");
-
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.setAttribute("href", url);
-        link.setAttribute("download", `تقرير_المبيعات_${start.format('YYYY-MM-DD')}_إلى_${end.format('YYYY-MM-DD')}.csv`);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+      } else {
+        orderData = [{ 'Message': 'لا توجد مبيعات في هذه الفترة' }];
       }
+      const wsOrder = XLSX.utils.json_to_sheet(orderData);
+      XLSX.utils.book_append_sheet(wb, wsOrder, "المبيعات");
+
+      // 2. Expenses Sheet
+      let expenseData = [];
+      if (expenseRes?.success && expenseRes?.result && expenseRes.result.length > 0) {
+        expenseData = expenseRes.result.map(exp => ({
+          'المصروف': exp.name,
+          'التصنيف': exp.expenseCategory,
+          'المبلغ': exp.amount,
+          'التاريخ': dayjs(exp.date).format('YYYY-MM-DD HH:mm'),
+          'البيان': exp.notes || '—',
+          'بواسطة': exp.user?.name || exp.createdBy?.name || '—',
+        }));
+      } else {
+        expenseData = [{ 'Message': 'لا توجد مصروفات في هذه الفترة' }];
+      }
+      const wsExpense = XLSX.utils.json_to_sheet(expenseData);
+      XLSX.utils.book_append_sheet(wb, wsExpense, "المصروفات");
+
+      // 3. Inventory Logs Sheet
+      let invData = [];
+      if (inventoryRes?.success && inventoryRes?.result && inventoryRes.result.length > 0) {
+        invData = inventoryRes.result.map(log => ({
+          'المنتج': log.product?.name || '—',
+          'العملية': log.type,
+          'الكمية': log.change,
+          'الرصيد السابق': log.previousStock,
+          'الرصيد الجديد': log.newStock,
+          'السبب': log.reason || '—',
+          'التاريخ': dayjs(log.created).format('YYYY-MM-DD HH:mm'),
+          'بواسطة': log.user?.name || '—',
+        }));
+      } else {
+        invData = [{ 'Message': 'لا توجد حركة مخزون في هذه الفترة' }];
+      }
+      const wsInv = XLSX.utils.json_to_sheet(invData);
+      XLSX.utils.book_append_sheet(wb, wsInv, "حركة المخزون");
+
+      // 4. Summary Sheet
+      const summaryData = [
+         { 'البيان': 'إجمالي المبيعات', 'القيمة': stats.totalRevenue || 0 },
+         { 'البيان': 'إجمالي المصروفات', 'القيمة': stats.totalExpense || 0 },
+         { 'البيان': 'إجمالي الأرباح', 'القيمة': stats.grossProfit || 0 },
+         { 'البيان': 'أرباح الشحن', 'القيمة': stats.totalDelivery || 0 },
+         { 'البيان': 'عدد المنتجات في المخزن', 'القيمة': stats.totalSupplements || 0 },
+         { 'البيان': 'منتجات منخفضة المخزون', 'القيمة': stats.lowStockItems || 0 }
+      ];
+      const wsSummary = XLSX.utils.json_to_sheet(summaryData);
+      XLSX.utils.book_append_sheet(wb, wsSummary, "الملخص");
+
+      // Save file
+      XLSX.writeFile(wb, `تقرير_شامل_${start.format('YYYY-MM-DD')}_إلى_${end.format('YYYY-MM-DD')}.xlsx`);
+
     } catch (error) {
       console.error('Export failed', error);
     }
