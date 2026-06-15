@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import dayjs from 'dayjs';
-import { Form, Input, Button, Select, Divider, Row, Col, DatePicker } from 'antd';
-import { PlusOutlined } from '@ant-design/icons';
+import { Form, Input, Button, Select, Divider, Row, Col, DatePicker, message, Spin, Tooltip } from 'antd';
+import { PlusOutlined, ScanOutlined, LoadingOutlined } from '@ant-design/icons';
 import OrderItemRow from './OrderItemRow';
 import MoneyInputFormItem from '@/components/MoneyInputFormItem';
 import { selectFinanceSettings } from '@/redux/settings/selectors';
@@ -10,6 +10,8 @@ import calculate from '@/utils/calculate';
 import { useSelector } from 'react-redux';
 import useResponsive from '@/hooks/useResponsive';
 import CreatableCustomerSelect from './CreatableCustomerSelect';
+import QRScannerModal from '@/components/QRScannerModal';
+import request from '@/request/request';
 
 export default function OrderForm({ subTotal = 0, current = null }) {
   const { last_invoice_number } = useSelector(selectFinanceSettings);
@@ -30,6 +32,15 @@ function LoadOrderForm({ subTotal = 0, current = null }) {
   const [currentYear, setCurrentYear] = useState(() => new Date().getFullYear());
   const [lastNumber, setLastNumber] = useState(() => last_invoice_number + 1);
   const { isMobile } = useResponsive();
+  const form = Form.useFormInstance();
+
+  // ── Scanner state ─────────────────────────────────────────────
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
+  const [scannedProducts, setScannedProducts] = useState({}); // { fieldKey: productObj }
+  const usbInputRef = useRef(null);
+  const addFieldFn = useRef(null); // stores Form.List `add` fn
+  // ─────────────────────────────────────────────────────────────
 
   const orderType = Form.useWatch('orderType');
   const deliveryFee = Form.useWatch('deliveryFee') || 0;
@@ -60,6 +71,67 @@ function LoadOrderForm({ subTotal = 0, current = null }) {
   useEffect(() => {
     if (addField.current) addField.current.click();
   }, []);
+
+  // ── Handle scan result (camera OR USB scanner) ────────────────
+  const handleScanSuccess = async (code) => {
+    if (!code || isSearching) return;
+    setIsSearching(true);
+    setIsScannerOpen(false);
+
+    try {
+      const data = await request.search({
+        entity: 'product',
+        options: { q: code.trim(), fields: 'name,sku,barcode' },
+      });
+
+      if (!data?.success || !data?.result?.length) {
+        message.error(`لم يتم العثور على منتج بالكود: ${code}`);
+        return;
+      }
+
+      const product = data.result[0];
+
+      // Check if already in the order → increment quantity
+      const items = form.getFieldValue('items') || [];
+      const existingIdx = items.findIndex(
+        (item) => item?.product === product._id
+      );
+
+      if (existingIdx !== -1) {
+        const currentQty = Number(items[existingIdx]?.quantity) || 0;
+        form.setFields([
+          { name: ['items', existingIdx, 'quantity'], value: currentQty + 1 },
+        ]);
+        message.success(`تمت إضافة وحدة إضافية لـ: ${product.name}`);
+      } else {
+        // Add new row with the scanned product
+        if (addFieldFn.current) {
+          addFieldFn.current();
+          // Wait a tick for the new row to mount, then set its product
+          setTimeout(() => {
+            const newItems = form.getFieldValue('items') || [];
+            const newIdx = newItems.length - 1;
+            setScannedProducts((prev) => ({ ...prev, [newIdx]: product }));
+            message.success(`تمت إضافة: ${product.name}`);
+          }, 80);
+        }
+      }
+    } catch (err) {
+      message.error('حدث خطأ أثناء البحث');
+    } finally {
+      setIsSearching(false);
+      if (usbInputRef.current) usbInputRef.current.value = '';
+    }
+  };
+
+  // USB / Bluetooth scanner: fires when Enter is pressed
+  const handleUsbInput = (e) => {
+    if (e.key === 'Enter') {
+      const val = e.target.value.trim();
+      if (val) handleScanSuccess(val);
+    }
+  };
+  // ─────────────────────────────────────────────────────────────
 
   return (
     <>
@@ -194,27 +266,66 @@ function LoadOrderForm({ subTotal = 0, current = null }) {
           </Col>
         </Row>
       )}
+      {/* ── USB / Bluetooth Scanner Input ── */}
+      <div style={{ marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
+        <Tooltip title="اسكانر USB/Bluetooth: ضع المؤشر هنا واسكن المنتج مباشرة">
+          <Input
+            ref={usbInputRef}
+            prefix={isSearching ? <Spin indicator={<LoadingOutlined spin />} size="small" /> : <ScanOutlined style={{ color: '#1677ff' }} />}
+            placeholder="اسكن الباركود هنا (USB / Bluetooth)..."
+            onKeyDown={handleUsbInput}
+            style={{ maxWidth: 320 }}
+            disabled={isSearching}
+          />
+        </Tooltip>
+        <Button
+          icon={<ScanOutlined />}
+          type="default"
+          onClick={() => setIsScannerOpen(true)}
+          loading={isSearching}
+        >
+          {isMobile ? '' : 'كاميرا'}
+        </Button>
+      </div>
+
       <Form.List name="items">
-        {(fields, { add, remove }) => (
-          <>
-            {fields.map((field) => (
-              <OrderItemRow key={field.key} remove={remove} field={field} current={current}></OrderItemRow>
-            ))}
-            <Form.Item>
-              <Button
-                type="dashed"
-                size="large"
-                onClick={() => add()}
-                block
-                icon={<PlusOutlined />}
-                ref={addField}
-              >
-                إضافة مكمل جديد
-              </Button>
-            </Form.Item>
-          </>
-        )}
+        {(fields, { add, remove }) => {
+          // Store `add` fn so handleScanSuccess can call it
+          addFieldFn.current = add;
+          return (
+            <>
+              {fields.map((field) => (
+                <OrderItemRow
+                  key={field.key}
+                  remove={remove}
+                  field={field}
+                  current={current}
+                  initialProduct={scannedProducts[field.name] || null}
+                />
+              ))}
+              <Form.Item>
+                <Button
+                  type="dashed"
+                  size="large"
+                  onClick={() => add()}
+                  block
+                  icon={<PlusOutlined />}
+                  ref={addField}
+                >
+                  إضافة مكمل يدوياً
+                </Button>
+              </Form.Item>
+            </>
+          );
+        }}
       </Form.List>
+
+      {/* ── Camera Scanner Modal ── */}
+      <QRScannerModal
+        open={isScannerOpen}
+        onCancel={() => setIsScannerOpen(false)}
+        onScanSuccess={handleScanSuccess}
+      />
       <Divider dashed />
       <div style={{ position: 'relative', width: ' 100%', display: 'flex', flexDirection: isMobile ? 'column-reverse' : 'row', justifyContent: 'space-between', alignItems: isMobile ? 'flex-end' : 'flex-start' }}>
         <div style={{ width: isMobile ? '100%' : '200px', marginTop: isMobile ? '20px' : '0' }}>

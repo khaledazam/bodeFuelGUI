@@ -29,7 +29,7 @@ export default function ProductForm({ isUpdateForm = false }) {
           </Form.Item>
         </Col>
         <Col xs={24} sm={12} md={6}>
-          <Form.Item name="sku" label="الرقم التسلسلي" rules={[{ required: true, message: 'مطلوب الرقم التسلسلي' }]}>
+          <Form.Item name="sku" label="الرقم التسلسلي (اختياري)">
             <Input 
               suffix={
                 <Button 

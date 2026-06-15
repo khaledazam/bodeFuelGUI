@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Form, Input, Row, Col } from 'antd';
 import { DeleteOutlined } from '@ant-design/icons';
 import { useMoney } from '@/settings';
@@ -7,10 +7,11 @@ import AutoCompleteAsync from '@/components/AutoCompleteAsync';
 import useResponsive from '@/hooks/useResponsive';
 import MoneyInputFormItem from '@/components/MoneyInputFormItem';
 
-export default function OrderItemRow({ field, remove, current = null }) {
+export default function OrderItemRow({ field, remove, current = null, initialProduct = null }) {
   const [totalState, setTotal] = useState(undefined);
   const [price, setPrice] = useState(0);
   const [quantity, setQuantity] = useState(1);
+  const didInit = useRef(false);
 
   const money = useMoney();
   const form = Form.useFormInstance();
@@ -35,6 +36,26 @@ export default function OrderItemRow({ field, remove, current = null }) {
       ]);
     }
   };
+
+  // ── Auto-fill from scanner ────────────────────────────────────
+  useEffect(() => {
+    if (!initialProduct || didInit.current) return;
+    didInit.current = true;
+
+    const defaultPrice = initialProduct.sellPrice || initialProduct.price || 0;
+    const costPriceVal = initialProduct.costPrice || 0;
+
+    setPrice(defaultPrice);
+
+    form.setFields([
+      { name: ['items', field.name, 'product'], value: initialProduct },
+      { name: ['items', field.name, 'price'], value: defaultPrice },
+      { name: ['items', field.name, 'costPrice'], value: costPriceVal },
+      { name: ['items', field.name, 'quantity'], value: 1 },
+    ]);
+  }, [initialProduct]);
+  // ─────────────────────────────────────────────────────────────
+
 
   const toNumber = (v) =>
     v === '' || v === null || v === undefined
@@ -65,15 +86,17 @@ export default function OrderItemRow({ field, remove, current = null }) {
           <AutoCompleteAsync
             entity={'product'}
             displayLabels={['name', 'sku']}
-            searchFields={'name,sku'}
+            searchFields={'name,sku,barcode'}
             onUpdateOption={handleProductChange}
             placeholder="اختر المكمل"
+            value={initialProduct || undefined}
           />
         </Form.Item>
         <Form.Item name={[field.name, 'costPrice']} hidden>
           <Input />
         </Form.Item>
       </Col>
+
       <Col xs={8} sm={4} md={3}>
         <Form.Item
           name={[field.name, 'quantity']}
