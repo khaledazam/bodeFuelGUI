@@ -149,10 +149,9 @@ function LoadOrderForm({ subTotal = 0, current = null }) {
           <Form.Item
             label="رقم الطلب #"
             name="invoiceNumber"
-            initialValue={`ORD-${lastNumber}`}
-            rules={[{ required: true }]}
+            initialValue={current ? undefined : "يُنشأ تلقائياً"}
           >
-            <Input style={{ width: '100%' }} />
+            <Input disabled style={{ width: '100%', textAlign: 'center', fontWeight: 'bold' }} />
           </Form.Item>
         </Col>
         <Col xs={24} sm={12} md={5}>
