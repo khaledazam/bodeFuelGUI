@@ -2,22 +2,78 @@
 
 /* Global printing style - only for the receipt */
 @media print {
-    body * {
-        visibility: hidden;
+    /* If the thermal receipt is in the DOM, hide the app root to prevent extra height and pages */
+    body:has(#thermal-receipt) #root {
+        display: none !important;
     }
 
-    #thermal-receipt, #thermal-receipt * {
-        visibility: visible;
+    /* Hide modal masks and footer elements during printing */
+    body:has(#thermal-receipt) .ant-modal-mask,
+    body:has(#thermal-receipt) .ant-modal-header,
+    body:has(#thermal-receipt) .ant-modal-footer,
+    body:has(#thermal-receipt) .ant-modal-close {
+        display: none !important;
+    }
+
+    /* Make modal containers static for printing to correctly calculate flow height */
+    body:has(#thermal-receipt) .ant-modal-root {
+        position: static !important;
+    }
+
+    body:has(#thermal-receipt) .ant-modal-wrap {
+        position: static !important;
+        width: auto !important;
+        height: auto !important;
+        overflow: visible !important;
+    }
+
+    body:has(#thermal-receipt) .ant-modal {
+        position: static !important;
+        top: 0 !important;
+        margin: 0 auto !important;
+        padding: 0 !important;
+        width: 80mm !important;
+        max-width: 80mm !important;
+        box-shadow: none !important;
+    }
+
+    body:has(#thermal-receipt) .ant-modal-content {
+        padding: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        border-radius: 0 !important;
+        width: 80mm !important;
+        max-width: 80mm !important;
+    }
+
+    body:has(#thermal-receipt) .ant-modal-body {
+        padding: 0 !important;
+    }
+
+    body:has(#thermal-receipt) html, 
+    body:has(#thermal-receipt) body {
+        height: auto !important;
+        min-height: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        background: #fff !important;
     }
 
     #thermal-receipt {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 80mm;
-        margin: 0;
-        padding: 4mm;
-        background: white;
+        position: relative !important;
+        left: auto !important;
+        top: auto !important;
+        width: 80mm !important;
+        max-width: 80mm !important;
+        margin: 0 auto !important;
+        padding: 4mm 8mm !important; /* Proper padding from right and left */
+        box-sizing: border-box !important;
+        background: white !important;
+    }
+
+    #thermal-receipt, #thermal-receipt * {
+        box-sizing: border-box !important;
+        visibility: visible !important;
     }
 
     @page {
@@ -36,7 +92,8 @@
     width: 100%;
     max-width: 80mm;
     margin: 0 auto;
-    padding: 15px;
+    padding: 15px 30px; /* Consistent left/right padding for preview screen */
+    box-sizing: border-box;
     background: #fff;
     direction: rtl;
     color: #000;
