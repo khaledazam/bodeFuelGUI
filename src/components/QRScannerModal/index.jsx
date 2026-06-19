@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Modal, Button, message } from 'antd';
 import { CameraOutlined, ScanOutlined } from '@ant-design/icons';
 import useQRScanner from '@/hooks/useQRScanner';
@@ -7,14 +7,30 @@ export default function QRScannerModal({ open, onCancel, onScanSuccess }) {
   const { startScanner, stopScanner, isScannerRunning } = useQRScanner();
   const scannerId = 'qr-reader';
 
+  // Keep references to the latest callbacks to avoid closure issues
+  const onScanSuccessRef = useRef(onScanSuccess);
+  const onCancelRef = useRef(onCancel);
+
+  useEffect(() => {
+    onScanSuccessRef.current = onScanSuccess;
+  }, [onScanSuccess]);
+
+  useEffect(() => {
+    onCancelRef.current = onCancel;
+  }, [onCancel]);
+
   useEffect(() => {
     if (open) {
       // Start scanner when modal opens
       setTimeout(() => {
         startScanner(scannerId, (decodedText) => {
           message.success('تم مسح الرمز بنجاح: ' + decodedText);
-          onScanSuccess(decodedText);
-          onCancel(); // Close modal on success
+          if (onScanSuccessRef.current) {
+            onScanSuccessRef.current(decodedText);
+          }
+          if (onCancelRef.current) {
+            onCancelRef.current();
+          }
         });
       }, 500); // Small delay to ensure DIV is rendered
     } else {
@@ -24,7 +40,7 @@ export default function QRScannerModal({ open, onCancel, onScanSuccess }) {
     return () => {
       stopScanner();
     };
-  }, [open, startScanner, stopScanner, onScanSuccess, onCancel]);
+  }, [open, startScanner, stopScanner]);
 
   return (
     <Modal
