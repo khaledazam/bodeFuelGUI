@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Form, Input, Button, Row, Col, Divider, Upload, Space, InputNumber } from 'antd';
+import { Form, Input, Button, Row, Col, Divider, Upload, Space, InputNumber, Switch } from 'antd';
 import { PlusOutlined, DeleteOutlined, ScanOutlined } from '@ant-design/icons';
 import SelectAsync from '@/components/SelectAsync';
 import MoneyInputFormItem from '@/components/MoneyInputFormItem';
@@ -13,6 +13,7 @@ export default function ProductForm({ isUpdateForm = false }) {
   const form = Form.useFormInstance();
   const currentAdmin = useSelector(selectCurrentAdmin);
   const isCashier = currentAdmin?.role === 'cashier';
+  const isBundle = Form.useWatch('isBundle');
 
   const handleScanSuccess = (decodedText) => {
     if (form) {
@@ -101,6 +102,53 @@ export default function ProductForm({ isUpdateForm = false }) {
           </Form.Item>
         </Col>
       </Row>
+
+      <Row gutter={[12, 12]}>
+        <Col xs={24} sm={24} md={24}>
+          <Form.Item name="isBundle" label="هل هذا باكدج / عرض مجمع؟" valuePropName="checked" initialValue={false}>
+            <Switch checkedChildren="نعم" unCheckedChildren="لا" />
+          </Form.Item>
+        </Col>
+      </Row>
+
+      {isBundle && (
+        <>
+          <Divider orientation="left">مكونات الباكدج (المنتجات المجمعة)</Divider>
+          <Form.List name="bundleItems">
+            {(fields, { add, remove }) => (
+              <>
+                {fields.map(({ key, name, ...restField }) => (
+                  <Space key={key} style={{ display: 'flex', marginBottom: 8 }} align="baseline">
+                    <Form.Item
+                      {...restField}
+                      name={[name, 'product']}
+                      rules={[{ required: true, message: 'يرجى اختيار منتج' }]}
+                      style={{ width: 300 }}
+                    >
+                      <SelectAsync entity="product" displayLabels={['name']} placeholder="اختر المنتج" />
+                    </Form.Item>
+                    <Form.Item
+                      {...restField}
+                      name={[name, 'quantity']}
+                      rules={[{ required: true, message: 'مطلوب' }]}
+                      initialValue={1}
+                      style={{ width: 100 }}
+                    >
+                      <InputNumber min={1} placeholder="الكمية" style={{ width: '100%' }} />
+                    </Form.Item>
+                    <DeleteOutlined onClick={() => remove(name)} style={{ color: 'red', fontSize: '16px', cursor: 'pointer' }} />
+                  </Space>
+                ))}
+                <Form.Item>
+                  <Button type="dashed" onClick={() => add()} block icon={<PlusOutlined />}>
+                    إضافة منتج للباكدج
+                  </Button>
+                </Form.Item>
+              </>
+            )}
+          </Form.List>
+        </>
+      )}
 
       <Divider orientation="left">تفاصيل المكمل</Divider>
       

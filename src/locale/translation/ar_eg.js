@@ -134,6 +134,16 @@ const ar_eg = {
   expense_list: 'قائمة المصروفات',
   add_new_expense: 'إضافة مصروف جديد',
   employee_cashier: 'الموظف / الكاشير',
+  rule_name: 'اسم قاعدة الخصم',
+  trigger_product: 'المكمل الأساسي (المحفز)',
+  discounted_product: 'المكمل المستحق للخصم',
+  discount_type: 'نوع الخصم',
+  discount_value: 'قيمة الخصم',
+  percentage: 'نسبة مئوية (%)',
+  fixed_amount: 'مبلغ ثابت',
+  enabled: 'نشط / مفعل',
+  discountrule: 'قاعدة الخصم',
+  discountrules: 'قواعد الخصم والعروض التلقائية',
 };
 
 export default ar_eg;

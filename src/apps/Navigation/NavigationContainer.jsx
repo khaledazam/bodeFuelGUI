@@ -19,6 +19,7 @@ import {
   BarChartOutlined,
   MenuOutlined,
   FileSyncOutlined,
+  PercentageOutlined,
 } from '@ant-design/icons';
 
 import { useSelector } from 'react-redux';
@@ -95,6 +96,11 @@ function Sidebar({ collapsible, isMobile = false }) {
       label: <Link to={'/brand'}>الماركات</Link>,
     },
     {
+      key: 'discountrule',
+      icon: <PercentageOutlined />,
+      label: <Link to={'/discountrule'}>العروض والخصومات</Link>,
+    },
+    {
       key: 'reports',
       icon: <BarChartOutlined />,
       label: <Link to={'/reports'}>التقارير</Link>,
@@ -108,7 +114,7 @@ function Sidebar({ collapsible, isMobile = false }) {
 
   if (currentAdmin?.role === 'cashier') {
     items = items.filter(
-      (item) => !['generalSettings', 'reports', 'supplier', 'inventory', 'inventorylog'].includes(item.key)
+      (item) => !['generalSettings', 'reports', 'supplier', 'inventory', 'inventorylog', 'discountrule'].includes(item.key)
     );
   }
 

@@ -17,6 +17,7 @@ const Supplier = lazy(() => import('@/pages/Customer')); // using dummy componen
 const Category = lazy(() => import('@/pages/Category'));
 const Brand = lazy(() => import('@/pages/Brand'));
 const Reports = lazy(() => import('@/pages/Reports'));
+const DiscountRule = lazy(() => import('@/pages/DiscountRule'));
 
 const Settings = lazy(() => import('@/pages/Settings/Settings'));
 
@@ -90,6 +91,10 @@ let routes = {
     {
       path: '/brand',
       element: <Brand />,
+    },
+    {
+      path: '/discountrule',
+      element: <DiscountRule />,
     },
     {
       path: '/settings',

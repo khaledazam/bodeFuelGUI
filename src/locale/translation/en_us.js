@@ -451,6 +451,15 @@ const lang = {
   proforma_invoices: 'quote',
   search: 'search',
   employee_cashier: 'Employee / Cashier',
+  rule_name: 'Rule Name',
+  trigger_product: 'Trigger Product',
+  discounted_product: 'Discounted Product',
+  discount_type: 'Discount Type',
+  discount_value: 'Discount Value',
+  percentage: 'Percentage (%)',
+  fixed_amount: 'Fixed Amount',
+  discountrule: 'Discount Rule',
+  discountrules: 'Discount Rules & Promos',
 };
 
 export default lang;
