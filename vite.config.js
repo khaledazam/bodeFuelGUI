@@ -13,7 +13,7 @@ export default ({ mode }) => {
 
   const config = {
     plugins: [react()],
-    base: './',
+    base: '/',
     resolve: {
       alias: {
         '@': path.resolve(__dirname, 'src'),

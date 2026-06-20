@@ -28,6 +28,11 @@ export default function DashboardModule() {
   const translate = useLanguage();
   const { moneyFormatter } = useMoney();
   const [dateRange, setDateRange] = useState([dayjs().startOf('month'), dayjs().endOf('day')]);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const {
     result: summaryResult,
@@ -343,22 +348,26 @@ export default function DashboardModule() {
       <Row gutter={[24, 24]}>
         <Col xs={24} lg={16}>
           <Card title={translate('revenue_performance')} bordered={false} className="shadow-sm">
-            <div style={{ width: '100%', height: 350 }}>
-              <ResponsiveContainer>
-                <AreaChart data={timeline}>
-                  <defs>
-                    <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#1890ff" stopOpacity={0.1}/>
-                      <stop offset="95%" stopColor="#1890ff" stopOpacity={0}/>
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="_id" />
-                  <YAxis tickFormatter={(val) => `$${val/1000}k`} />
-                  <Tooltip formatter={(val) => moneyFormatter({ amount: val })} />
-                  <Area type="monotone" dataKey="revenue" stroke="#1890ff" fillOpacity={1} fill="url(#colorRevenue)" strokeWidth={2} />
-                </AreaChart>
-              </ResponsiveContainer>
+            <div style={{ width: '100%', height: 350, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+              {isMounted && timeline && timeline.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={timeline}>
+                    <defs>
+                      <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#1890ff" stopOpacity={0.1}/>
+                        <stop offset="95%" stopColor="#1890ff" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                    <XAxis dataKey="_id" />
+                    <YAxis tickFormatter={(val) => `$${val/1000}k`} />
+                    <Tooltip formatter={(val) => moneyFormatter({ amount: val })} />
+                    <Area type="monotone" dataKey="revenue" stroke="#1890ff" fillOpacity={1} fill="url(#colorRevenue)" strokeWidth={2} />
+                  </AreaChart>
+                </ResponsiveContainer>
+              ) : (
+                <div style={{ color: '#999' }}>جاري تحميل مخطط البيانات...</div>
+              )}
             </div>
           </Card>
         </Col>
