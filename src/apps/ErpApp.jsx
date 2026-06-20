@@ -1,5 +1,4 @@
-import { useLayoutEffect } from 'react';
-import { useEffect } from 'react';
+import { useLayoutEffect, useEffect, Suspense } from 'react';
 import { selectAppSettings } from '@/redux/settings/selectors';
 import { useDispatch, useSelector } from 'react-redux';
 
@@ -63,7 +62,9 @@ export default function ErpCrmApp() {
               maxWidth: isMobile ? '100%' : 1400,
             }}
           >
-            <AppRouter />
+            <Suspense fallback={<PageLoader />}>
+              <AppRouter />
+            </Suspense>
           </Content>
         </Layout>
       </Layout>
