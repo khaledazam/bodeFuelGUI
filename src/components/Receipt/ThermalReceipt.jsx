@@ -36,25 +36,28 @@ export default function ThermalReceipt({ open, onCancel, orderData }) {
       title: 'م',
       dataIndex: 'index',
       key: 'index',
-      width: 30,
+      width: 22,
       render: (_, __, index) => index + 1,
     },
     {
       title: 'الصنف',
       dataIndex: ['product', 'name'],
       key: 'name',
-      render: (text) => <span style={{ fontSize: '11px', fontWeight: 600 }}>{text}</span>,
+      width: 80,
+      render: (text) => <span style={{ fontSize: '10px', fontWeight: 600, wordBreak: 'break-word' }}>{text}</span>,
     },
     {
       title: 'الكمية',
       dataIndex: 'quantity',
       key: 'quantity',
+      width: 30,
       align: 'center',
     },
     {
       title: 'السعر',
       dataIndex: 'price',
       key: 'price',
+      width: 50,
       align: 'left',
       render: (val) => (val || 0).toFixed(2),
     },
@@ -62,6 +65,7 @@ export default function ThermalReceipt({ open, onCancel, orderData }) {
       title: 'الإجمالي',
       dataIndex: 'total',
       key: 'total',
+      width: 55,
       align: 'left',
       render: (val) => (val || 0).toFixed(2),
     },
@@ -106,7 +110,7 @@ export default function ThermalReceipt({ open, onCancel, orderData }) {
         <div className="receipt-info-grid">
           <Row>
             <Col span={10} className="label">رقم الفاتورة :</Col>
-            <Col span={14} className="value">{orderData.invoiceNumber}</Col>
+            <Col span={14} className="value" style={{ wordBreak: 'break-all', fontSize: '11px' }}>{orderData.invoiceNumber}</Col>
           </Row>
           <Row>
             <Col span={10} className="label">التاريخ :</Col>
@@ -196,15 +200,10 @@ export default function ThermalReceipt({ open, onCancel, orderData }) {
 
         {/* ── Footer ─────────────────────── */}
         <div className="receipt-footer-v2">
-          <Row align="middle" gutter={10}>
-            <Col span={8}>
-              <QRCode value={orderData.invoiceNumber} size={70} bordered={false} />
-            </Col>
-            <Col span={16}>
-              <p style={{ fontWeight: 700, margin: '0 0 5px 0' }}>شكراً لثقتك بنا</p>
-              <p style={{ fontSize: 10, margin: 0 }}>نتمنى لك يوماً رياضياً سعيداً ❤️</p>
-            </Col>
-          </Row>
+          <div style={{ textAlign: 'center', marginBottom: 10 }}>
+            <p style={{ fontWeight: 700, margin: '0 0 5px 0', fontSize: 14 }}>شكراً لثقتك بنا</p>
+            <p style={{ fontSize: 11, margin: 0 }}>نتمنى لك يوماً رياضياً سعيداً ❤️</p>
+          </div>
           
           <div className="social-icons">
              <Space size="large" style={{ marginTop: 15, fontSize: 16 }}>
