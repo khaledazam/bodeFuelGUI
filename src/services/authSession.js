@@ -49,7 +49,7 @@ export function handleUnauthorizedSession() {
   }
 
   isSessionRedirecting = true;
-  window.location.assign('/logout');
+  window.location.assign('/login');
 }
 
 export function resetUnauthorizedRedirect() {

@@ -113,7 +113,14 @@ export const resetPassword =
   };
 
 export const logout = () => async (dispatch) => {
-  // 1. Immediately clear frontend state
+  // 1. Silently attempt to notify backend while we still have the token
+  try {
+    await authService.logout();
+  } catch (error) {
+    console.error('Backend logout failed', error);
+  }
+
+  // 2. Clear frontend state
   dispatch({
     type: actionTypes.LOGOUT_SUCCESS,
   });
@@ -121,14 +128,6 @@ export const logout = () => async (dispatch) => {
   clearPersistedAuth();
   window.localStorage.removeItem('settings');
   window.localStorage.setItem('isLogout', JSON.stringify({ isLogout: true }));
-
-  // 2. Silently attempt to notify backend
-  try {
-    await authService.logout();
-  } catch (error) {
-    console.error('Backend logout failed', error);
-    // We don't revert here because the user wants to leave.
-  }
 };
 
 export const updateProfile =
