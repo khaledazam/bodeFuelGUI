@@ -122,45 +122,50 @@ export default function UpdateForm({ config, formElements, withUpload = false })
     <div style={show}>
       <Loading isLoading={isLoading}>
         <Form form={form} layout="vertical" onFinish={onSubmit}>
-          {Array.isArray(formElements) &&
-            formElements.map((field) => (
-              <Form.Item
-                key={field.name}
-                label={field.label}
-                name={field.name}
-                rules={[{ required: field.required }]}
-              >
-                {field.type === 'number' ? (
-                  // stringMode: keeps value as string string during typing.
-                  // Eliminates the +1 increment and cursor jump bugs.
-                  // Only toNumber() on submit produces actual Number for backend.
-                  <InputNumber
-                    stringMode
-                    style={{ width: '100%' }}
-                    placeholder="0"
-                    autoComplete="off"
-                    precision={field.precision ?? 2}
-                    parser={(val) => val?.replace(',', '.')}
-                    onFocus={() => { isTyping.current = true; }}
-                    onBlur={() => { isTyping.current = false; }}
-                  />
-                ) : field.type === 'select' ? (
-                  <Select options={field.options} />
-                ) : (
-                  <Input />
-                )}
+          {Array.isArray(formElements)
+            ? formElements.map((field) => (
+                <Form.Item
+                  key={field.name}
+                  label={field.label}
+                  name={field.name}
+                  rules={[{ required: field.required }]}
+                >
+                  {field.type === 'number' ? (
+                    // stringMode: keeps value as string string during typing.
+                    // Eliminates the +1 increment and cursor jump bugs.
+                    // Only toNumber() on submit produces actual Number for backend.
+                    <InputNumber
+                      stringMode
+                      style={{ width: '100%' }}
+                      placeholder="0"
+                      autoComplete="off"
+                      precision={field.precision ?? 2}
+                      parser={(val) => val?.replace(',', '.')}
+                      onFocus={() => { isTyping.current = true; }}
+                      onBlur={() => { isTyping.current = false; }}
+                    />
+                  ) : field.type === 'select' ? (
+                    <Select options={field.options} />
+                  ) : (
+                    <Input />
+                  )}
+                </Form.Item>
+              ))
+            : formElements}
+
+          {Array.isArray(formElements) && (
+            <>
+              <Form.Item style={{ display: 'inline-block', paddingRight: '5px' }}>
+                <Button type="primary" htmlType="submit">
+                  {translate('Save')}
+                </Button>
               </Form.Item>
-            ))}
 
-          <Form.Item style={{ display: 'inline-block', paddingRight: '5px' }}>
-            <Button type="primary" htmlType="submit">
-              {translate('Save')}
-            </Button>
-          </Form.Item>
-
-          <Form.Item style={{ display: 'inline-block', paddingLeft: '5px' }}>
-            <Button onClick={showCurrentRecord}>{translate('Cancel')}</Button>
-          </Form.Item>
+              <Form.Item style={{ display: 'inline-block', paddingLeft: '5px' }}>
+                <Button onClick={showCurrentRecord}>{translate('Cancel')}</Button>
+              </Form.Item>
+            </>
+          )}
         </Form>
       </Loading>
     </div>
