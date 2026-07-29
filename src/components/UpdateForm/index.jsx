@@ -15,6 +15,7 @@ export default function UpdateForm({ config, formElements, withUpload = false })
 
   const { current, isLoading, isSuccess } = useSelector(selectUpdatedItem);
   const { state, actions: sidePanelActions } = useSidePanelContext();
+  const { isEditBoxOpen } = state;
   const { actions: panelActions } = usePanelContext();
 
   const [form] = Form.useForm();
@@ -61,6 +62,16 @@ export default function UpdateForm({ config, formElements, withUpload = false })
   };
 
   // =========================
+  // RESET FORM ON CLOSE
+  // =========================
+  useEffect(() => {
+    if (!isEditBoxOpen) {
+      lastLoadedId.current = null;
+      form.resetFields();
+    }
+  }, [isEditBoxOpen]);
+
+  // =========================
   // SAFE HYDRATION
   // =========================
   useEffect(() => {
@@ -72,9 +83,6 @@ export default function UpdateForm({ config, formElements, withUpload = false })
 
     // CRITICAL: Never overwrite form while user is actively typing
     if (isTyping.current) return;
-
-    // Also skip if the user has already touched the form (e.g. panel re-opened same record)
-    if (form.isFieldsTouched()) return;
 
     let newValues = { ...current };
 
@@ -113,7 +121,6 @@ export default function UpdateForm({ config, formElements, withUpload = false })
     }
   }, [isSuccess]);
 
-  const { isEditBoxOpen } = state;
   const show = isEditBoxOpen
     ? { display: 'block', opacity: 1 }
     : { display: 'none', opacity: 0 };
